@@ -62,11 +62,10 @@
 }
 
 .controls {
-  margin: 20px 0;
   display: flex;
+  gap: 10px;
+  margin-top: 10px;
   justify-content: center;
-  align-items: center;
-  gap: 15px;
 }
 
 .controls button {
@@ -272,6 +271,14 @@
 
 .detect-button:hover {
   background-color: #0056b3;
+}
+
+.detect-button.active {
+  background-color: #dc3545;
+}
+
+.detect-button.active:hover {
+  background-color: #c82333;
 }
 
 .detect-error {

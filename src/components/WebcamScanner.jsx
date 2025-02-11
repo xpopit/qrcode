@@ -1,40 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react'
-import etro from "etro"
+import { scan } from 'qr-scanner-wechat'
 
 function WebcamScanner({ onQrCodeDetected }) {
-  const canvasRef = useRef(null)
-  const movieRef = useRef(null)
+  const videoRef = useRef(null)
   const streamRef = useRef(null)
   const [status, setStatus] = useState('')
-  const [detectedImages, setDetectedImages] = useState([])
+  const [isScanning, setIsScanning] = useState(false)
+  const [hasCamera, setHasCamera] = useState(false)
+  const isMounted = useRef(true)
 
-  const imagedataToImage = (imagedata) => {
-    const canvas = document.createElement('canvas')
-    canvas.width = imagedata.width
-    canvas.height = imagedata.height
-    const ctx = canvas.getContext('2d')
-    ctx.putImageData(imagedata, 0, 0)
-    return canvas.toDataURL()
-  }
-
-  const handleDetectClick = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleDetectClick = async () => {
+    if (!videoRef.current || !hasCamera) return;
 
     try {
-      if (window.cvQr) {
-        const result = window.cvQr.load(canvas)
-        const infos = result?.getInfos()
-        setStatus(JSON.stringify(infos))
-
-        const images = result?.getImages()
-        if (images) {
-          const convertedImages = images.map(imgData => imagedataToImage(imgData))
-          setDetectedImages(convertedImages)
-        }
-        if (result) {
-          onQrCodeDetected(result)
-        }
+      const canvas = document.createElement('canvas')
+      canvas.width = videoRef.current.videoWidth
+      canvas.height = videoRef.current.videoHeight
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
+      
+      const result = await scan(canvas)
+      if (result?.text) {
+        setStatus(`ตรวจพบ QR Code: ${result.text}`)
+        onQrCodeDetected({ 
+          getInfos: () => [{ data: result.text }] 
+        })
+      } else {
+        setStatus('ไม่พบ QR Code')
       }
     } catch (error) {
       console.error('QR code scanning error:', error)
@@ -42,65 +34,100 @@ function WebcamScanner({ onQrCodeDetected }) {
     }
   }
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const movie = new etro.Movie({ canvas });
-    movieRef.current = movie;
+  const toggleScanning = () => {
+    if (!hasCamera) {
+      setStatus('ไม่พบกล้อง กรุณาอนุญาตการเข้าถึงกล้อง')
+      return
+    }
+    setIsScanning(prev => !prev)
+  }
 
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        streamRef.current = stream;
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        return new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            resolve(video);
-          };
-        });
-      })
-      .then((video) => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const layer = new etro.layer.Video({
-          startTime: 0,
-          source: video,
-        });
-        movie.addLayer(layer);
-        movie.play();
-      });
+  useEffect(() => {
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            width: 512,
+            height: 512,
+          },
+        })
+        
+        if (!isMounted.current) {
+          stream.getTracks().forEach(track => track.stop())
+          return
+        }
+
+        streamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          await videoRef.current.play()
+          setHasCamera(true)
+          setStatus('พร้อมสแกน QR Code')
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error)
+        if (error.name === 'NotAllowedError') {
+          setStatus('กรุณาอนุญาตการเข้าถึงกล้อง')
+        } else if (error.name === 'NotFoundError') {
+          setStatus('ไม่พบกล้องบนอุปกรณ์นี้')
+        } else {
+          setStatus('ไม่สามารถเข้าถึงกล้องได้')
+        }
+        setHasCamera(false)
+      }
+    }
+
+    setupCamera()
 
     return () => {
-      if (movieRef.current) {
-        movieRef.current.stop();
-      }
+      isMounted.current = false
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach(track => track.stop())
       }
-    };
-  }, []);
+    }
+  }, [])
+
+  useEffect(() => {
+    let intervalId = null
+
+    if (isScanning && hasCamera) {
+      intervalId = setInterval(handleDetectClick, 1000)
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [isScanning, hasCamera])
 
   return (
     <div id="video-container">
-      <canvas ref={canvasRef} id="qr-canvas"></canvas>
-      <button onClick={handleDetectClick} className="detect-button">
-        ตรวจจับ QR Code
-      </button>
+      <video 
+        ref={videoRef} 
+        style={{ width: '100%', maxWidth: '512px' }}
+        playsInline
+      />
+      <div className="controls">
+        <button 
+          onClick={handleDetectClick} 
+          className="detect-button"
+          disabled={!hasCamera}
+        >
+          ตรวจจับ QR Code
+        </button>
+        <button 
+          onClick={toggleScanning} 
+          className={`detect-button ${isScanning ? 'active' : ''}`}
+          disabled={!hasCamera}
+        >
+          {isScanning ? 'หยุดสแกนอัตโนมัติ' : 'เริ่มสแกนอัตโนมัติ'}
+        </button>
+      </div>
       {status && (
         <div className="status-text">
-          สถานะ: {status}
-        </div>
-      )}
-      {detectedImages.length > 0 && (
-        <div className="detected-images">
-          {detectedImages.map((imgUrl, index) => (
-            <img 
-              key={index} 
-              src={imgUrl} 
-              alt={`Detected QR ${index + 1}`}
-              className="detected-image"
-            />
-          ))}
+          {status}
         </div>
       )}
     </div>
