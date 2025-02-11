@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <title>qr-scanner-wechat Playground</title>
-  <meta name="description" content="Opinionated Vite Starter Template">
-  <script type="module" crossorigin src="/assets/index-fbeeeae9.js"></script>
-  <link rel="stylesheet" href="/assets/index-53add5eb.css">
-</head>
-<body class="font-sans text-white bg-black">
-  <div id="app"></div>
-  <noscript>
-    <div>Please enable JavaScript to use this application.</div>
-  </noscript>
-  
-</body>
-</html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Scanner</title>
+    <script src="/libs/OpencvQr.js"></script>
+    <script>
+    // ฟังก์ชันสำหรับตรวจสอบ environment
+
+
+
+    const cvQr = new OpencvQr({
+      dw: `${window.location.origin}/models/detect.caffemodel`,
+      sw: `${window.location.origin}/models/sr.caffemodel`,
+    });
+    window.cvQr = cvQr;
+    </script>
+    <script type="module" crossorigin src="/assets/index-CBuakP4e.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BLruM1pE.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html> 
