@@ -3,18 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@zxing/library": "^0.21.3",
-    "p5": "^1.11.3",
+    "@babylonjs/core": "^7.48.3",
+    "etro": "^0.12.1",
+    "opencv-qr": "^0.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "pnpm run build",
+    "deploy": "pnpm run build && gh-pages -d dist"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
+    "gh-pages": "^6.3.0",
+    "gpu.js": "^2.16.0",
     "vite": "^6.0.11"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

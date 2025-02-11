@@ -1,88 +1,33 @@
-import React, { useEffect, useRef, useState } from 'react'
-import p5 from 'p5'
-import { BrowserMultiFormatReader } from '@zxing/library'
+import React, { useState } from 'react'
 import './App.css'
+import WebcamScanner from './components/WebcamScanner'
 
 function App() {
-  const [qrResult, setQrResult] = useState('')
-  const [zoom, setZoom] = useState(1)
-  const videoRef = useRef(null)
-  const codeReader = useRef(new BrowserMultiFormatReader())
+  const [qrCodeInfo, setQrCodeInfo] = useState('กำลังตรวจจับ QR code...')
 
-  useEffect(() => {
-    let myP5 = new p5((sketch) => {
-      let capture
-
-      sketch.setup = () => {
-        const canvas = sketch.createCanvas(640, 480)
-        canvas.parent(videoRef.current)
-        capture = sketch.createCapture(sketch.VIDEO)
-        capture.hide()
-
-        // Start QR code scanning
-        codeReader.current.decodeFromVideoDevice(
-          null,
-          'video',
-          (result, err) => {
-            if (result) {
-              const text = result.getText()
-              console.log('QR Code detected:', text)
-              setQrResult(text)
-            }
-            if (err && err.name !== 'NotFoundException') {
-              console.error('QR Code scanning error:', err)
-            }
-          }
-        )
-      }
-
-      sketch.draw = () => {
-        sketch.push()
-        sketch.scale(zoom)
-        sketch.image(capture, 0, 0, sketch.width / zoom, sketch.height / zoom)
-        sketch.pop()
-
-        // Draw zoom guide
-        sketch.push()
-        sketch.noFill()
-        sketch.stroke(255)
-        sketch.strokeWeight(2)
-        sketch.rect(sketch.width/2 - 100, sketch.height/2 - 100, 200, 200)
-        sketch.pop()
-      }
-    })
-
-    return () => {
-      codeReader.current.reset()
-      myP5.remove()
+  // ฟังก์ชันรับข้อมูล QR code
+  const handleQrCodeDetected = (result) => {
+    const infos = result?.getInfos()
+    if (infos && infos.length > 0) {
+      setQrCodeInfo(infos[0]?.data || 'ไม่พบข้อมูล QR code')
+      console.log(infos[0]?.data)
+    } else {
+      setQrCodeInfo('กำลังตรวจจับ QR code...')
     }
-  }, [zoom])
-
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.2, 3))
-  }
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.2, 1))
   }
 
   return (
     <div className="App">
-      <h1>QR Code Scanner</h1>
-      <div className="controls">
-        <button onClick={handleZoomOut}>Zoom Out (-)</button>
-        <span className="zoom-level">Zoom: {zoom.toFixed(1)}x</span>
-        <button onClick={handleZoomIn}>Zoom In (+)</button>
-      </div>
-      <div ref={videoRef} id="video-container">
-        <video id="video"></video>
-      </div>
-      <div id="result">
-        {qrResult ? (
-          <p>Scanned QR Code: {qrResult}</p>
-        ) : (
-          <p>กำลังค้นหา QR Code...</p>
-        )}
+      <div className="container">
+        <h1 className="title">Webcam QR Scanner</h1>
+        <div className="content">
+          <div className="webcam-section">
+            <WebcamScanner onQrCodeDetected={handleQrCodeDetected} />
+          </div>
+        </div>
+        <div className="preview-text">
+          {qrCodeInfo}
+        </div>
       </div>
     </div>
   )
