@@ -1,25 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Scanner</title>
-    <script src="/qrcode/libs/OpencvQr.js"></script>
-    <script>
-    // ฟังก์ชันสำหรับตรวจสอบ environment
 
+<head>
+  <style>
+    .canvasInput-wrap {
+      width: 400px;
+    }
 
+    #canvasInput {
+      width: 100%;
+    }
 
+    #qrcodeCanvasOutput {
+      height: 120px;
+      width: 120px;
+      object-fit: contain;
+    }
+    #imageWrap {
+      img {
+        margin: 10px 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>เครื่องมือสแกนคิวอาร์โค้ดด้วย OpenCV</h1>
+  <input type="file" id="fileInput" name="file"   capture="environment"  accept="image/*"  onchange="fileInputLoadComplete()"/>
+  <hr />
+  <div id="qrcodeShowcase">
+    <div>
+      <div class="canvasInput-wrap">
+        <canvas id="canvasInput"></canvas>
+      </div>
+    </div>
+    <hr />
+    <div id="status-wrap">ผลการสแกน:<span id="status"></span></div>
+    <hr />
+    <div>
+      <label for="">OpenCV QRCode image:</label>
+      <br />
+      <div id="imageWrap"></div>
+    </div>
+  </div>
+  <script src="OpencvQr.js"></script>
+  <script>
     const cvQr = new OpencvQr({
-      dw: `${window.location.href}/models/detect.caffemodel`,
-      sw: `${window.location.href}/models/sr.caffemodel`,
+      dw: "https://leidenglai.github.io/opencv-js-qrcode/models/detect.caffemodel",
+      sw: "https://leidenglai.github.io/opencv-js-qrcode/models/sr.caffemodel",
     });
-    window.cvQr = cvQr;
-    </script>
-    <script type="module" crossorigin src="/qrcode/assets/index-BU62htcy-1739416418941.js"></script>
-    <link rel="stylesheet" crossorigin href="/qrcode/assets/index-DTpstjgU-1739416418941.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html> 
+
+    function loadImageToCanvas(url, cavansId) {
+      let canvas = document.getElementById(cavansId);
+      let ctx = canvas.getContext("2d");
+      let img = new Image();
+
+      img.crossOrigin = "anonymous";
+      img.onload = function () {
+        const { width, height } = img;
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+      };
+      img.src = url;
+    }
+
+    function imagedataToImage(imagedata) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = imagedata.width;
+      canvas.height = imagedata.height;
+      ctx.putImageData(imagedata, 0, 0);
+
+      const image = new Image();
+
+      image.src = canvas.toDataURL();
+      return image;
+    }
+    
+    async function fileInputLoadComplete() {
+        const imageWrap = document.getElementById("imageWrap");
+        imageWrap.innerHTML = "";
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const result = cvQr.load("canvasInput");
+      const infos = result?.getInfos();
+      document.getElementById("status").innerText = JSON.stringify(infos);
+      const images = result?.getImages();
+      images?.forEach((imgData) => {
+        const image = imagedataToImage(imgData);
+
+        
+        imageWrap.appendChild(image);
+      });
+    };
+
+    function qrcodeHandleFiles(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        loadImageToCanvas(event.target.result, "canvasInput");
+      };
+      reader.readAsDataURL(file);
+    }
+    let fileInputElement = document.getElementById("fileInput");
+
+    fileInputElement?.addEventListener("change", qrcodeHandleFiles, false);
+
+    // loadImageToCanvas("./img/1.png", "canvasInput");
+  </script>
+</body>
