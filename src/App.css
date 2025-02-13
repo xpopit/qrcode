@@ -38,21 +38,6 @@
   }
 }
 
-#video-container {
-  position: relative;
-  width: 100%;
-  max-width: 640px;
-  background-color: #000;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#video-container canvas {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
 #result {
   margin-top: 20px;
   padding: 10px;
@@ -346,4 +331,21 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 4px;
+}
+
+.canvas-container {
+  width: 100%;
+  max-width: 512px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas {
+  width: 100%;
+  max-width: 512px;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #ccc;
 }

@@ -2,20 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Code Scanner</title>
-    <script src="/src/dist/OpencvQr.js"></script>
+    <title>QR Scanner</title>
+    <script src="/qrcode/libs/OpencvQr.js"></script>
     <script>
+    // ฟังก์ชันสำหรับตรวจสอบ environment
+
+
+
     const cvQr = new OpencvQr({
-      dw: "http://127.0.0.1:5500/models/detect.caffemodel",
-      sw: "http://127.0.0.1:5500/models/sr.caffemodel",
+      dw: `${window.location.href}/models/detect.caffemodel`,
+      sw: `${window.location.href}/models/sr.caffemodel`,
     });
     window.cvQr = cvQr;
-
     </script>
-    <script type="module" crossorigin src="/assets/index-Dr6x0QrG.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CMeW_zKb.css">
+    <script type="module" crossorigin src="/qrcode/assets/index-BW1xWWXa-1739415771887.js"></script>
+    <link rel="stylesheet" crossorigin href="/qrcode/assets/index-DTpstjgU-1739415771887.css">
   </head>
   <body>
     <div id="root"></div>
