@@ -45,15 +45,25 @@ function App() {
   }
 
   const handleDetectClick = () => {
-    const result = window.cvQr.load("canvasInput")
-    
-    const infos = result?.getInfos()
-    setStatus(JSON.stringify(infos))
+    try {
+      if (!window.cvQr) {
+        setStatus('QR detector not initialized')
+        return
+      }
+      
+      const result = window.cvQr.load("canvasInput")
+      
+      const infos = result?.getInfos()
+      setStatus(JSON.stringify(infos))
 
-    const images = result?.getImages()
-    if (images) {
-      const convertedImages = images.map(imgData => imagedataToImage(imgData))
-      setDetectedImages(convertedImages)
+      const images = result?.getImages()
+      if (images) {
+        const convertedImages = images.map(imgData => imagedataToImage(imgData))
+        setDetectedImages(convertedImages)
+      }
+    } catch (error) {
+      console.error('QR detection error:', error)
+      setStatus('Error detecting QR code')
     }
   }
 
@@ -81,16 +91,16 @@ function App() {
         onChange={handleFileChange}
         accept="image/*"
         capture="environment"
-        style={{ maxWidth: "400px" }}
+        // style={{ maxWidth: "400px" }}
       />
       <canvas 
         ref={canvasRef} 
         id="canvasInput"
-        style={{ maxWidth: "4oopx" }}
+        // style={{ maxWidth: "400px" }}
       ></canvas>
       
       <div>
-        
+        <button onClick={handleDetectClick}>ตรวจจับ QR</button>
         <button onClick={handleClearClick}>ล้างข้อมูล</button>
       </div>
 
